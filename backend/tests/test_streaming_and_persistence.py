@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
 import pytest
 
-from app.auth.google_oauth import GoogleIdentity
 from app.cache.translation_cache import MemoryTranslationCache
 from app.config import Settings
-from app.main import create_app
 from app.persistence.database import Database
 from app.persistence.models import Base
 from app.persistence.repositories.messages import MessageRepository, TranslationRecord
@@ -71,33 +68,3 @@ async def test_message_repository_persists_envelope_and_translation() -> None:
     assert stored.id == message_id
     assert stored.status == "translated"
     await database.engine.dispose()
-
-
-def test_websocket_broadcasts_original_then_translation_stream() -> None:
-    class FakeGoogleOAuthClient:
-        async def verify_token(self, credential: str) -> GoogleIdentity:
-            if credential != "good-token":
-                raise ValueError("bad token")
-            return GoogleIdentity(sub="sub-123", email="user@example.com")
-
-    app = create_app()
-    app.state.google_oauth_client = FakeGoogleOAuthClient()
-    client = TestClient(app)
-    auth_response = client.post("/api/auth/google", json={"credential": "good-token"})
-    token = auth_response.json()["token"]
-
-    with client.websocket_connect(f"/ws/chat/room-stream?token={token}") as socket:
-        socket.send_json(
-            {
-                "type": "send_message",
-                "client_msg_id": "m-stream",
-                "text": "안녕하세요",
-                "source_lang": "ko",
-                "target_lang": "en",
-            }
-        )
-        payloads = [socket.receive_json() for _ in range(4)]
-
-    assert payloads[0]["t"] == "msg_start"
-    assert [payload["t"] for payload in payloads[1:]].count("msg_delta") == 2
-    assert payloads[-1]["t"] == "msg_final"

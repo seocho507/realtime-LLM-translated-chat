@@ -19,6 +19,7 @@ from app.persistence.repositories.messages import MessageRepository
 from app.realtime.connection_manager import ConnectionManager
 from app.translation.adapters.anthropic import AnthropicTranslationAdapter
 from app.translation.adapters.mock import MockTranslationAdapter
+from app.translation.adapters.openai import OpenAITranslationAdapter
 from app.translation.router import TranslationRouter
 from app.translation.service import TranslationService
 
@@ -51,7 +52,7 @@ def create_app() -> FastAPI:
     )
 
     router = TranslationRouter(
-        adapters=[AnthropicTranslationAdapter(), MockTranslationAdapter()],
+        adapters=[AnthropicTranslationAdapter(), OpenAITranslationAdapter(), MockTranslationAdapter()],
         default_provider=settings.default_provider,
     )
     metrics = MetricsRegistry()
