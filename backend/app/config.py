@@ -12,6 +12,7 @@ class Settings:
     default_provider: str = os.getenv("DEFAULT_PROVIDER", "mock")
     default_model: str = os.getenv("DEFAULT_MODEL", "mock-sonnet")
     session_secret: str = os.getenv("SESSION_SECRET", "dev-session-secret-change-me")
+    session_ttl_seconds: int = int(os.getenv("SESSION_TTL_SECONDS", "28800"))
     google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
     google_allowed_domain: str = os.getenv("GOOGLE_ALLOWED_DOMAIN", "")
     translation_cache_ttl_seconds: int = int(os.getenv("TRANSLATION_CACHE_TTL_SECONDS", "86400"))
