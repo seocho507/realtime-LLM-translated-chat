@@ -15,4 +15,6 @@ web/coverage/
 backend/.pytest_cache/
 backend/*.db
 backend/.coverage
+backend/*.egg-info/
 talk.db
+*.egg-info/

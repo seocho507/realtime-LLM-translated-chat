@@ -3,11 +3,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChatMessage } from './TranslationBubble'
 import { createTranslationBuffer } from './translationBuffer'
 
-function toWebSocketUrl(apiBaseUrl: string, conversationId: string, token: string) {
+function toWebSocketUrl(apiBaseUrl: string, conversationId: string, token?: string) {
   const url = new URL(apiBaseUrl)
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
   url.pathname = `/ws/chat/${conversationId}`
-  url.searchParams.set('token', token)
+  if (token) {
+    url.searchParams.set('token', token)
+  }
   return url.toString()
 }
 
@@ -18,7 +20,7 @@ export function useChatSocket({
 }: {
   apiBaseUrl: string
   conversationId: string
-  token: string
+  token?: string
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [connected, setConnected] = useState(false)
@@ -36,9 +38,6 @@ export function useChatSocket({
   )
 
   useEffect(() => {
-    if (!token) {
-      return
-    }
     const socket = new WebSocket(toWebSocketUrl(apiBaseUrl, conversationId, token))
     socketRef.current = socket
     socket.onopen = () => setConnected(true)
