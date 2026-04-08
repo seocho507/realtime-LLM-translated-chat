@@ -12,6 +12,7 @@ export interface AuthSession {
 }
 
 const GOOGLE_SCRIPT = 'https://accounts.google.com/gsi/client'
+const SESSION_TOKEN_KEY = 'talk.sessionToken'
 
 function getApiBaseUrl() {
   return import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -63,7 +64,8 @@ export function useGoogleAuth() {
           return
         }
         const user = await response.json()
-        setSession({ token: '', user })
+        const token = window.localStorage.getItem(SESSION_TOKEN_KEY) ?? ''
+        setSession({ token, user })
       } catch {
         // best-effort session restore only
       }
@@ -85,6 +87,7 @@ export function useGoogleAuth() {
         throw new Error('Google login failed.')
       }
       const payload = (await response.json()) as AuthSession
+      window.localStorage.setItem(SESSION_TOKEN_KEY, payload.token)
       setSession(payload)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed.')

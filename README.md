@@ -19,8 +19,8 @@ Phased implementation of a provider-agnostic realtime chat service with:
 
 ```bash
 cd backend
-python -m pip install -e ".[dev]"
-pytest
+uv sync --extra dev
+uv run pytest
 ```
 
 ### Frontend
@@ -31,4 +31,3 @@ npm install
 npm run test
 npm run build
 ```
-
