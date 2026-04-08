@@ -34,4 +34,5 @@ async def chat_socket(websocket: WebSocket, conversation_id: str) -> None:
             )
             await orchestrator.handle_message(conversation_id, principal, message)
     except WebSocketDisconnect:
+        websocket.app.state.metrics.increment("ws_disconnect_rate")
         connection_manager.disconnect(conversation_id, websocket)

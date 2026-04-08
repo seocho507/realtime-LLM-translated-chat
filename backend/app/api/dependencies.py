@@ -1,21 +1,13 @@
 from __future__ import annotations
 
-from fastapi import Depends, Request
+from fastapi import Request
 
-from app.auth.google_oauth import GoogleOAuthVerifier, GoogleTokenInfoVerifier
+from app.auth.google_oauth import GoogleOAuthClient
 from app.auth.session_service import SessionService
-from app.config import Settings, get_settings
 
 
-def get_app_settings() -> Settings:
-    return get_settings()
-
-
-def get_google_verifier(settings: Settings = Depends(get_app_settings)) -> GoogleOAuthVerifier:
-    return GoogleTokenInfoVerifier(
-        client_id=settings.google_client_id,
-        allowed_domain=settings.google_allowed_domain,
-    )
+def get_google_verifier(request: Request) -> GoogleOAuthClient:
+    return request.app.state.google_oauth_client
 
 
 def get_session_service(request: Request) -> SessionService:

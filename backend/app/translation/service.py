@@ -5,7 +5,7 @@ from typing import AsyncIterator
 
 from app.config import Settings
 from app.observability.metrics import MetricsRegistry
-from app.translation.ports import LLMStreamEvent, StreamFinal, TranslationCache, TranslationRequest, TranslationLLM
+from app.translation.ports import LLMStreamEvent, StreamFinal, StreamStart, TranslationCache, TranslationRequest
 from app.translation.router import TranslationRouter
 
 
@@ -42,8 +42,12 @@ class TranslationService:
         cached = await self._cache.get(cache_key)
         if cached:
             self._metrics.increment("cache_hit_rate")
+            yield StreamStart(
+                provider=str(cached.get("provider", adapter.provider)),
+                model=str(cached.get("model", adapter.model)),
+            )
             yield StreamFinal(
-                text=cached["text"],
+                text=str(cached["text"]),
                 finish_reason="stop",
                 cached=True,
                 latency_first_token_ms=0,
@@ -58,6 +62,7 @@ class TranslationService:
             yield event
 
         if final_event:
+            self._metrics.increment("cache_write_total")
             await self._cache.set(
                 cache_key,
                 {"text": final_event.text, "provider": adapter.provider, "model": adapter.model},

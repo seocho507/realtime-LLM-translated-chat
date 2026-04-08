@@ -9,8 +9,8 @@ import os
 class Settings:
     app_name: str = os.getenv("APP_NAME", "Talk Backend")
     database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./talk.db")
-    default_provider: str = os.getenv("DEFAULT_PROVIDER", "mock")
-    default_model: str = os.getenv("DEFAULT_MODEL", "mock-sonnet")
+    default_provider: str = os.getenv("DEFAULT_PROVIDER", "anthropic")
+    default_model: str = os.getenv("DEFAULT_MODEL", "claude-3-5-sonnet-latest")
     session_secret: str = os.getenv("SESSION_SECRET", "dev-session-secret-change-me")
     session_ttl_seconds: int = int(os.getenv("SESSION_TTL_SECONDS", "28800"))
     google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
