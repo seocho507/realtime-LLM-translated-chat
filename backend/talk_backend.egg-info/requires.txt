@@ -1,0 +1,9 @@
+fastapi<1.0,>=0.115
+uvicorn<1.0,>=0.32
+sqlalchemy<3.0,>=2.0
+aiosqlite<1.0,>=0.20
+httpx<1.0,>=0.28
+
+[dev]
+pytest<9.0,>=8.3
+pytest-asyncio<1.0,>=0.24

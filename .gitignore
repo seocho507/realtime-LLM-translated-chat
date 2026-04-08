@@ -1,0 +1,17 @@
+.omx/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+coverage/
+htmlcov/
+node_modules/
+dist/
+web/dist/
+web/coverage/
+backend/.pytest_cache/
+backend/*.db
+backend/.coverage

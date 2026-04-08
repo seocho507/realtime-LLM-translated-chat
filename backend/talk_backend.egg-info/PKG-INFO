@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: talk-backend
+Version: 0.1.0
+Summary: Real-time LLM translated chat backend
+Requires-Python: >=3.10
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: uvicorn<1.0,>=0.32
+Requires-Dist: sqlalchemy<3.0,>=2.0
+Requires-Dist: aiosqlite<1.0,>=0.20
+Requires-Dist: httpx<1.0,>=0.28
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.3; extra == "dev"
+Requires-Dist: pytest-asyncio<1.0,>=0.24; extra == "dev"
