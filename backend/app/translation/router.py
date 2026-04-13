@@ -24,9 +24,10 @@ class TranslationRouter:
         self._health = {provider: ProviderHealth() for provider in self._adapters}
         self._default_provider = default_provider
         self._policies = {
+            "groq": ProviderPolicy(latency_rank=1, cost_rank=1),
             "anthropic": ProviderPolicy(latency_rank=1, cost_rank=2),
             "openai": ProviderPolicy(latency_rank=2, cost_rank=3),
-            "mock": ProviderPolicy(latency_rank=3, cost_rank=1),
+            "mock": ProviderPolicy(latency_rank=4, cost_rank=1),
         }
 
     def set_health(self, provider: str, available: bool, reason: str | None = None) -> None:

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.auth_google import router as auth_router
 from app.api.ws import router as ws_router
@@ -17,15 +20,15 @@ from app.persistence.database import Database
 from app.persistence.models import Base
 from app.persistence.repositories.messages import MessageRepository
 from app.realtime.connection_manager import ConnectionManager
-from app.translation.adapters.anthropic import AnthropicTranslationAdapter
+from app.translation.adapters.groq import GroqTranslationAdapter
 from app.translation.adapters.mock import MockTranslationAdapter
-from app.translation.adapters.openai import OpenAITranslationAdapter
 from app.translation.router import TranslationRouter
 from app.translation.service import TranslationService
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    web_dist_dir = Path(settings.web_dist_dir)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -45,17 +48,25 @@ def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=list(settings.cors_allowed_origins),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     router = TranslationRouter(
-        adapters=[AnthropicTranslationAdapter(), OpenAITranslationAdapter(), MockTranslationAdapter()],
+        adapters=[
+            GroqTranslationAdapter(
+                api_key=settings.groq_api_key,
+                model=settings.default_model,
+                base_url=settings.groq_api_base_url,
+            ),
+            MockTranslationAdapter(),
+        ],
         default_provider=settings.default_provider,
     )
     metrics = MetricsRegistry()
+    app.state.settings = settings
     app.state.metrics = metrics
     app.state.translation_service = TranslationService(
         settings=settings,
@@ -83,6 +94,19 @@ def create_app() -> FastAPI:
             "counters": dict(app.state.metrics.counters),
             "timings": {key: values[:] for key, values in app.state.metrics.timings.items()},
         }
+
+    if web_dist_dir.is_dir():
+        app.mount("/", StaticFiles(directory=web_dist_dir, html=True), name="web")
+    else:
+        @app.get("/")
+        async def web_not_built() -> JSONResponse:
+            return JSONResponse(
+                {
+                    "status": "ok",
+                    "message": "web build not found",
+                    "expected_dist_dir": str(web_dist_dir),
+                }
+            )
 
     return app
 

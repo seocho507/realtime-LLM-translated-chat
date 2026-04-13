@@ -19,7 +19,7 @@ Phased implementation of a provider-agnostic realtime chat service with:
 
 ```bash
 cd backend
-uv sync --extra dev
+uv sync --python 3.11 --extra dev
 uv run pytest
 ```
 
@@ -27,7 +27,21 @@ uv run pytest
 
 ```bash
 cd web
-npm install
+npm ci
 npm run test
 npm run build
 ```
+
+### Same-origin local run
+
+```bash
+cd web
+npm ci
+npm run build
+
+cd ../backend
+uv sync --python 3.11 --extra dev
+uv run uvicorn app.main:app --reload
+```
+
+Then open `http://localhost:8000`.
