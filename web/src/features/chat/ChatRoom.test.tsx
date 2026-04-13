@@ -102,6 +102,7 @@ describe('ChatRoom', () => {
       />,
     )
 
+    await user.click(screen.getByRole('button', { name: /open room menu/i }))
     await user.clear(screen.getByLabelText(/room id/i))
     await user.type(screen.getByLabelText(/room id/i), 'Team Alpha')
     await user.click(screen.getByRole('button', { name: /join room/i }))
