@@ -1,7 +1,6 @@
 import { FormEvent, KeyboardEvent, useEffect, useState } from 'react'
-import { ArrowRightLeft, ArrowUpRight, Languages, Menu, SendHorizonal, Sparkles, X } from 'lucide-react'
+import { ArrowRightLeft, Menu, SendHorizonal, X } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -10,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import type { AuthSession } from '../auth/useGoogleAuth'
 import { normalizeRoomId } from './roomId'
@@ -81,12 +79,12 @@ export function ChatRoom({
   }
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_18rem] lg:items-start lg:justify-center lg:gap-8">
-      <div className="order-1 mx-auto grid min-h-[76svh] w-full max-w-[28rem] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[1.8rem] border border-border/70 bg-white/85 shadow-[0_28px_80px_-45px_rgba(17,24,39,0.35)] backdrop-blur-xl sm:rounded-[2rem] lg:mx-0 lg:min-h-0 lg:max-w-[26rem] lg:aspect-[390/844]">
+    <section className="mx-auto w-full max-w-[28rem] lg:max-w-[26rem]">
+      <div className="grid min-h-[76svh] w-full grid-rows-[auto_1fr_auto] overflow-hidden rounded-[1.8rem] border border-border bg-card sm:rounded-[2rem] lg:min-h-0 lg:aspect-[390/844]">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-4 py-4 sm:px-6">
           <div className="min-w-0">
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Conversation</p>
             <h3 className="mt-1 truncate text-base font-semibold tracking-[-0.04em] sm:text-lg">{conversationId}</h3>
+            <p className="text-xs text-muted-foreground">{session.user.display_name}</p>
           </div>
           <div className="relative">
             <Button
@@ -127,12 +125,9 @@ export function ChatRoom({
 
         <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           {messages.length === 0 ? (
-            <div className="flex h-full min-h-56 items-center justify-center rounded-[1.25rem] border border-dashed border-border bg-background/70 px-5 text-center sm:min-h-64 sm:rounded-[1.5rem] sm:px-6">
+            <div className="flex h-full min-h-56 items-center justify-center rounded-[1.25rem] border border-dashed border-border bg-background px-5 text-center sm:min-h-64 sm:rounded-[1.5rem] sm:px-6">
               <div className="max-w-sm space-y-3">
-                <p className="text-base font-medium tracking-[-0.04em] sm:text-lg">Send the first line</p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Type a short message, choose a target language, and the stream will fill this area.
-                </p>
+                <p className="text-sm text-muted-foreground">No messages yet.</p>
               </div>
             </div>
           ) : (
@@ -144,10 +139,10 @@ export function ChatRoom({
           )}
         </div>
 
-        <div className="border-t border-border/70 bg-background/92 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+        <div className="border-t border-border/70 bg-background px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
           <div className="grid gap-4">
             <form className="grid gap-4" onSubmit={submit}>
-              <div className="rounded-[1.4rem] border border-border/70 bg-white/85 p-3 shadow-sm">
+              <div className="rounded-[1.4rem] border border-border bg-white p-3">
                 <Textarea
                   className="min-h-28 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                   id="message"
@@ -159,7 +154,6 @@ export function ChatRoom({
                 />
               </div>
               <div className="flex flex-col gap-3">
-                <div className="rounded-[1.25rem] border border-border/70 bg-white/80 p-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <label className="sr-only" htmlFor="target-language">
                     Target language
@@ -174,10 +168,6 @@ export function ChatRoom({
                       <SelectItem value="ja">Japanese</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs leading-5 text-muted-foreground">
-                    Current room: {conversationId}. Messages stay isolated per room id.
-                  </p>
-                </div>
                 </div>
                 <Button className="w-full rounded-[1.2rem] sm:w-auto sm:min-w-32 sm:self-end" disabled={!canSend} size="lg" type="submit">
                   <SendHorizonal className="size-4" />
@@ -188,58 +178,6 @@ export function ChatRoom({
           </div>
         </div>
       </div>
-
-      <aside className="order-2 space-y-4 rounded-[1.5rem] border border-border/60 bg-white/70 p-4 backdrop-blur-sm lg:order-2 lg:w-full lg:max-w-[18rem] lg:space-y-6 lg:border-0 lg:bg-transparent lg:p-0">
-        <div className="space-y-3">
-          <Badge variant="outline" className="rounded-full px-3 py-1 text-[11px] tracking-[0.22em]">
-            Workspace
-          </Badge>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-[-0.06em] sm:text-3xl">Chat</h2>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Original text lands first, then the translation stream resolves in place.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 lg:gap-4">
-          <div className="rounded-[1.25rem] border border-border/70 bg-white/70 p-4 sm:rounded-[1.4rem]">
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Session</p>
-            <p className="mt-2 text-sm font-medium break-words">{session.user.display_name}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{session.user.auth_provider}</p>
-          </div>
-
-          <div className="rounded-[1.25rem] border border-border/70 bg-white/70 p-4 sm:rounded-[1.4rem]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Socket</p>
-                <p className="mt-2 text-sm font-medium">{connected ? 'Connected' : 'Connecting'}</p>
-              </div>
-              <Badge variant={connected ? 'default' : 'secondary'}>{connected ? 'Live' : 'Pending'}</Badge>
-            </div>
-          </div>
-        </div>
-
-        <Separator className="hidden lg:block" />
-
-        <div className="space-y-3">
-          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Flow</p>
-          <div className="space-y-2 text-sm text-foreground/80">
-            <p className="flex items-center gap-2">
-              <Sparkles className="size-4 text-primary" />
-              Source message appears immediately
-            </p>
-            <p className="flex items-center gap-2">
-              <ArrowUpRight className="size-4 text-primary" />
-              Translation deltas accumulate live
-            </p>
-            <p className="flex items-center gap-2">
-              <Languages className="size-4 text-primary" />
-              Final text locks with provider metadata
-            </p>
-          </div>
-        </div>
-      </aside>
     </section>
   )
 }
