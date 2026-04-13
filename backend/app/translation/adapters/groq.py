@@ -34,7 +34,7 @@ class GroqTranslationAdapter(TranslationLLM):
     def __init__(
         self,
         api_key: str = "",
-        model: str = "llama-3.1-8b-instant",
+        model: str = "openai/gpt-oss-20b",
         base_url: str = "https://api.groq.com/openai/v1/chat/completions",
         timeout_seconds: float = 30.0,
         transport: httpx.AsyncBaseTransport | None = None,

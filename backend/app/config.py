@@ -22,7 +22,7 @@ class Settings:
     app_name: str = field(default_factory=lambda: os.getenv("APP_NAME", "Talk Backend"))
     database_url: str = field(default_factory=lambda: os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./talk.db"))
     default_provider: str = field(default_factory=lambda: os.getenv("DEFAULT_PROVIDER", "groq"))
-    default_model: str = field(default_factory=lambda: os.getenv("DEFAULT_MODEL", "llama-3.1-8b-instant"))
+    default_model: str = field(default_factory=lambda: os.getenv("DEFAULT_MODEL", "openai/gpt-oss-20b"))
     groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
     groq_api_base_url: str = field(
         default_factory=lambda: os.getenv("GROQ_API_BASE_URL", "https://api.groq.com/openai/v1/chat/completions")

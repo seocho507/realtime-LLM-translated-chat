@@ -19,7 +19,7 @@ async def test_groq_adapter_streams_start_delta_and_final():
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.headers["Authorization"] == "Bearer test-key"
         payload = json.loads(request.content.decode("utf-8"))
-        assert payload["model"] == "llama-3.1-8b-instant"
+        assert payload["model"] == "openai/gpt-oss-20b"
         assert payload["stream"] is True
         return httpx.Response(200, content=body, headers={"Content-Type": "text/event-stream"})
 
