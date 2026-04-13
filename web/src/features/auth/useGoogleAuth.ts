@@ -4,7 +4,7 @@ export interface AuthSession {
   user: {
     session_id: string
     user_id: string
-    auth_provider: 'google' | 'guest'
+    auth_provider: 'google' | 'guest' | 'local'
     display_name: string
     google_sub: string | null
     email: string | null
@@ -75,45 +75,73 @@ export function useGoogleAuth() {
     void run()
   }, [apiBaseUrl])
 
-  const loginWithCredential = async (credential: string) => {
+  const authenticate = async (path: string, body: object, fallbackMessage: string) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/google`, {
+      const response = await fetch(`${apiBaseUrl}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify(body),
       })
       if (!response.ok) {
-        throw new Error('Google login failed.')
+        let detail = fallbackMessage
+        try {
+          const payload = (await response.json()) as { detail?: string }
+          detail = payload.detail ?? fallbackMessage
+        } catch {
+          // keep fallback message
+        }
+        throw new Error(detail)
       }
       const payload = (await response.json()) as AuthSession
       setSession(payload)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed.')
+      setError(err instanceof Error ? err.message : fallbackMessage)
     } finally {
       setLoading(false)
     }
   }
 
-  const continueAsGuest = async () => {
+  const loginWithCredential = async (credential: string) => {
+    await authenticate('/api/auth/google', { credential }, 'Google login failed.')
+  }
+
+  const continueAsGuest = async (displayName?: string) => {
+    await authenticate('/api/auth/guest', { display_name: displayName }, 'Guest entry failed.')
+  }
+
+  const signupWithLocalAccount = async ({
+    displayName,
+    email,
+    password,
+  }: {
+    displayName?: string
+    email: string
+    password: string
+  }) => {
+    await authenticate('/api/auth/signup', { display_name: displayName, email, password }, 'Sign up failed.')
+  }
+
+  const loginWithLocalAccount = async ({ email, password }: { email: string; password: string }) => {
+    await authenticate('/api/auth/login', { email, password }, 'Sign in failed.')
+  }
+
+  const logout = async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/guest`, {
+      const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({}),
       })
-      if (!response.ok) {
-        throw new Error('Guest entry failed.')
+      if (!response.ok && response.status !== 204) {
+        throw new Error('Sign out failed.')
       }
-      const payload = (await response.json()) as AuthSession
-      setSession(payload)
+      setSession(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Guest entry failed.')
+      setError(err instanceof Error ? err.message : 'Sign out failed.')
     } finally {
       setLoading(false)
     }
@@ -127,6 +155,9 @@ export function useGoogleAuth() {
     googleReady,
     loading,
     loginWithCredential,
+    loginWithLocalAccount,
+    logout,
     session,
+    signupWithLocalAccount,
   }
 }
