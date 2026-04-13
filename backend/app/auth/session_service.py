@@ -41,6 +41,19 @@ class SessionService:
         )
         return self._encode(principal)
 
+    def issue_local(self, user_id: str, email: str, display_name: str) -> tuple[str, SessionPrincipal]:
+        now = int(time.time())
+        principal = SessionPrincipal(
+            session_id=secrets.token_urlsafe(16),
+            user_id=user_id,
+            auth_provider="local",
+            display_name=display_name,
+            google_sub=None,
+            email=email,
+            expires_at=now + self._ttl_seconds,
+        )
+        return self._encode(principal)
+
     def issue_guest(self, display_name: str | None = None) -> tuple[str, SessionPrincipal]:
         now = int(time.time())
         guest_id = f"guest:{secrets.token_urlsafe(16)}"

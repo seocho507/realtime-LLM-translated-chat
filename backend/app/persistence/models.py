@@ -11,30 +11,42 @@ class Base(DeclarativeBase):
 
 
 class Message(Base):
-    __tablename__ = 'messages'
+    __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     conversation_id: Mapped[str] = mapped_column(String(128), index=True)
     sender_id: Mapped[str] = mapped_column(String(128), index=True)
     client_msg_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
     original_text: Mapped[str] = mapped_column(Text)
-    original_lang: Mapped[str] = mapped_column(String(16), default='auto')
-    status: Mapped[str] = mapped_column(String(32), default='translating')
+    original_lang: Mapped[str] = mapped_column(String(16), default="auto")
+    status: Mapped[str] = mapped_column(String(32), default="translating")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class MessageTranslation(Base):
-    __tablename__ = 'message_translations'
+    __tablename__ = "message_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    message_id: Mapped[int] = mapped_column(ForeignKey('messages.id'), index=True)
+    message_id: Mapped[int] = mapped_column(ForeignKey("messages.id"), index=True)
     target_lang: Mapped[str] = mapped_column(String(16))
     translated_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
     model: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    prompt_version: Mapped[str] = mapped_column(String(32), default='v1')
+    prompt_version: Mapped[str] = mapped_column(String(32), default="v1")
     cached: Mapped[bool] = mapped_column(Boolean, default=False)
     latency_first_token_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_total_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class LocalUser(Base):
+    __tablename__ = "local_users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    auth_provider: Mapped[str] = mapped_column(String(32), default="local")
+    display_name: Mapped[str] = mapped_column(String(128))
+    email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(512))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
