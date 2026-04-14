@@ -161,6 +161,32 @@ describe('ChatRoom', () => {
     expect(onLeave).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps the language selector and send button in the same responsive action row', () => {
+    render(
+      <ChatRoom
+        apiBaseUrl="http://localhost:8080"
+        conversationId="room-1"
+        onLeave={vi.fn()}
+        onRoomChange={vi.fn()}
+        session={{
+          user: {
+            session_id: 's1',
+            user_id: 'u1',
+            auth_provider: 'guest',
+            display_name: 'Guest User',
+            google_sub: null,
+            email: null,
+            expires_at: 9999999999,
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByTestId('composer-actions').className).toContain('sm:flex-row')
+    expect(screen.getByTestId('composer-actions').className).toContain('sm:items-end')
+    expect(screen.getByTestId('composer-actions').className).toContain('sm:justify-between')
+  })
+
   it('includes Chinese in the target language options', async () => {
     render(
       <ChatRoom

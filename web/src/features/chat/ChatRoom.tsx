@@ -173,8 +173,8 @@ export function ChatRoom({
                   rows={4}
                 />
               </div>
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-testid="composer-actions">
+                <div className="flex flex-col gap-3">
                   <label className="sr-only" htmlFor="target-language">
                     Target language
                   </label>
@@ -190,7 +190,7 @@ export function ChatRoom({
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="w-full rounded-[1.2rem] sm:w-auto sm:min-w-32 sm:self-end" disabled={!canSend} size="lg" type="submit">
+                <Button className="w-full rounded-[1.2rem] sm:w-auto sm:min-w-32 sm:shrink-0" disabled={!canSend} size="lg" type="submit">
                   <SendHorizonal className="size-4" />
                   Send
                 </Button>
