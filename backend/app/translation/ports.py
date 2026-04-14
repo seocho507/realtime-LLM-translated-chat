@@ -22,7 +22,7 @@ class TranslationRequest:
     context: list[LLMMessage] = field(default_factory=list)
     tone: str | None = None
     glossary: dict[str, str] | None = None
-    max_output_tokens: int = 256
+    max_output_tokens: int = 1536
     temperature: float = 0.0
     metadata: dict[str, str] = field(default_factory=dict)
 
