@@ -237,6 +237,7 @@ async def test_orchestrator_translates_per_target_language_and_records_metrics()
     ]
     assert connection_manager.payloads[0]['targets'] == ['client-en']
     assert connection_manager.payloads[0]['dst'] == 'en'
+    assert connection_manager.payloads[0]['sender_display_name'] == 'user@example.com'
     assert connection_manager.payloads[1]['targets'] == ['client-ko']
     assert connection_manager.payloads[1]['dst'] == 'ko'
     assert connection_manager.payloads[4]['text'] == '[en] hello'

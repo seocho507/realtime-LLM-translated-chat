@@ -6,6 +6,7 @@ import { TranslationBubble, type ChatMessage } from './TranslationBubble'
 
 const message: ChatMessage = {
   id: 'm1',
+  senderDisplayName: 'Guest User',
   original: '안녕하세요',
   translated: 'Hello',
   status: 'translated',
@@ -17,6 +18,7 @@ describe('TranslationBubble', () => {
   it('shows only the translated text by default', () => {
     render(<TranslationBubble message={message} />)
 
+    expect(screen.getByText('Guest User')).toBeTruthy()
     expect(screen.getByText('Hello')).toBeTruthy()
     expect(screen.queryByText('안녕하세요')).toBeNull()
     expect(screen.getByRole('button', { name: /show original/i })).toBeTruthy()

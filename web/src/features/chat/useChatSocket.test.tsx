@@ -82,13 +82,22 @@ describe('useChatSocket', () => {
     })
 
     act(() => {
-      socket.receive({ t: 'msg_start', id: 'm1', original: 'hello', src: 'en', dst: 'en', status: 'translating' })
+      socket.receive({
+        t: 'msg_start',
+        id: 'm1',
+        original: 'hello',
+        src: 'en',
+        dst: 'en',
+        status: 'translating',
+        sender_display_name: 'Guest User',
+      })
       socket.receive({ t: 'msg_final', id: 'm1', text: '[en] hello', dst: 'en' })
     })
 
     await waitFor(() => {
       const messages = screen.getByTestId('messages').textContent ?? ''
       expect(messages).toContain('"id":"m1"')
+      expect(messages).toContain('"senderDisplayName":"Guest User"')
       expect(messages).toContain('"translated":"[en] hello"')
       expect(messages).toContain('"dst":"en"')
     })
@@ -103,7 +112,15 @@ describe('useChatSocket', () => {
     expect(screen.getByTestId('messages').textContent).toContain('"dst":"en"')
 
     act(() => {
-      socket.receive({ t: 'msg_start', id: 'm2', original: 'world', src: 'en', dst: 'ko', status: 'translating' })
+      socket.receive({
+        t: 'msg_start',
+        id: 'm2',
+        original: 'world',
+        src: 'en',
+        dst: 'ko',
+        status: 'translating',
+        sender_display_name: 'Guest User',
+      })
       socket.receive({ t: 'msg_final', id: 'm2', text: '[ko] world', dst: 'ko' })
     })
 
@@ -122,7 +139,15 @@ describe('useChatSocket', () => {
 
     act(() => {
       firstSocket.open()
-      firstSocket.receive({ t: 'msg_start', id: 'm1', original: 'hello', src: 'en', dst: 'en', status: 'translating' })
+      firstSocket.receive({
+        t: 'msg_start',
+        id: 'm1',
+        original: 'hello',
+        src: 'en',
+        dst: 'en',
+        status: 'translating',
+        sender_display_name: 'Guest User',
+      })
       firstSocket.receive({ t: 'msg_final', id: 'm1', text: '[en] hello', dst: 'en' })
     })
 
@@ -136,6 +161,31 @@ describe('useChatSocket', () => {
       expect(MockWebSocket.instances).toHaveLength(2)
       expect(MockWebSocket.instances[1].url).toContain('/ws/chat/team-alpha')
       expect(screen.getByTestId('messages').textContent).toBe('[]')
+    })
+  })
+
+  it('falls back to the original text when translation errors', async () => {
+    render(<Harness conversationId="room-1" targetLang="en" />)
+    const socket = MockWebSocket.instances[0]
+
+    act(() => {
+      socket.open()
+      socket.receive({
+        t: 'msg_start',
+        id: 'm1',
+        original: 'hello',
+        src: 'en',
+        dst: 'en',
+        status: 'translating',
+        sender_display_name: 'Guest User',
+      })
+      socket.receive({ t: 'msg_error', id: 'm1', dst: 'en', code: 'translation_failed' })
+    })
+
+    await waitFor(() => {
+      const messages = screen.getByTestId('messages').textContent ?? ''
+      expect(messages).toContain('"translated":"hello"')
+      expect(messages).toContain('"status":"original"')
     })
   })
 })

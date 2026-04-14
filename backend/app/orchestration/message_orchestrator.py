@@ -63,6 +63,7 @@ class MessageOrchestrator:
                     dst=target_lang,
                     status="translating",
                     sender_id=principal.user_id,
+                    sender_display_name=principal.display_name,
                     sender_email=principal.email,
                 ),
             )

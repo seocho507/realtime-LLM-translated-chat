@@ -4,14 +4,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ChatRoom } from './ChatRoom'
 
-const { sendMessage } = vi.hoisted(() => ({
+const { sendMessage, mockedMessages } = vi.hoisted(() => ({
   sendMessage: vi.fn(),
+  mockedMessages: [] as Array<{
+    id: string
+    senderDisplayName: string
+    original: string
+    translated: string
+    status: string
+    src: string
+    dst: string
+  }>,
 }))
 
 vi.mock('./useChatSocket', () => ({
   useChatSocket: () => ({
     connected: true,
-    messages: [],
+    messages: mockedMessages,
     sendMessage,
   }),
 }))
@@ -19,6 +28,12 @@ vi.mock('./useChatSocket', () => ({
 describe('ChatRoom', () => {
   beforeEach(() => {
     sendMessage.mockReset()
+    mockedMessages.length = 0
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', {
+      configurable: true,
+      value: 640,
+    })
+    HTMLElement.prototype.scrollTo = vi.fn()
   })
 
   it('submits the draft when Enter is pressed', async () => {
@@ -108,5 +123,39 @@ describe('ChatRoom', () => {
     await user.click(screen.getByRole('button', { name: /join room/i }))
 
     expect(onRoomChange).toHaveBeenCalledWith('team-alpha')
+  })
+
+  it('renders sender names and scrolls to the latest message', () => {
+    mockedMessages.push({
+      id: 'm1',
+      senderDisplayName: 'Guest User',
+      original: 'hello',
+      translated: '[en] hello',
+      status: 'translated',
+      src: 'en',
+      dst: 'en',
+    })
+
+    render(
+      <ChatRoom
+        apiBaseUrl="http://localhost:8080"
+        conversationId="room-1"
+        onRoomChange={vi.fn()}
+        session={{
+          user: {
+            session_id: 's1',
+            user_id: 'u1',
+            auth_provider: 'guest',
+            display_name: 'Guest User',
+            google_sub: null,
+            email: null,
+            expires_at: 9999999999,
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getAllByText('Guest User').length).toBeGreaterThan(0)
+    expect(HTMLElement.prototype.scrollTo).toHaveBeenCalled()
   })
 })

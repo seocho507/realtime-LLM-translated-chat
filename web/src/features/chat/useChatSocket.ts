@@ -46,6 +46,7 @@ export function useChatSocket({
   const upsertMessage = (payload: Record<string, string>) => {
     const nextMessage: ChatMessage = {
       id: payload.id ?? '',
+      senderDisplayName: payload.sender_display_name ?? payload.sender_email ?? payload.sender_id ?? 'Unknown',
       original: payload.original ?? '',
       translated: '',
       status: payload.status ?? 'translating',
@@ -93,7 +94,12 @@ export function useChatSocket({
         setMessages((current) =>
           current.map((message) =>
             message.id === payload.id
-              ? { ...message, status: 'error', dst: payload.dst ?? message.dst }
+              ? {
+                  ...message,
+                  translated: message.original,
+                  status: 'original',
+                  dst: payload.dst ?? message.dst,
+                }
               : message,
           ),
         )

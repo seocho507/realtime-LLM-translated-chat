@@ -1,4 +1,4 @@
-import { FormEvent, KeyboardEvent, useEffect, useState } from 'react'
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { ArrowRightLeft, Menu, SendHorizonal, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ export function ChatRoom({
   const [targetLang, setTargetLang] = useState('en')
   const [roomDraft, setRoomDraft] = useState(conversationId)
   const [menuOpen, setMenuOpen] = useState(false)
+  const messageViewportRef = useRef<HTMLDivElement | null>(null)
   const { connected, messages, sendMessage } = useChatSocket({
     apiBaseUrl,
     conversationId,
@@ -40,6 +41,19 @@ export function ChatRoom({
   useEffect(() => {
     setRoomDraft(conversationId)
   }, [conversationId])
+
+  useEffect(() => {
+    const viewport = messageViewportRef.current
+    if (!viewport || messages.length === 0) {
+      return
+    }
+    const lastMessage = messages[messages.length - 1]
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    viewport.scrollTo({
+      top: viewport.scrollHeight,
+      behavior: prefersReducedMotion || lastMessage.status === 'translating' ? 'auto' : 'smooth',
+    })
+  }, [messages])
 
   const submitDraft = () => {
     const text = draft.trim()
@@ -123,7 +137,7 @@ export function ChatRoom({
           </div>
         </header>
 
-        <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+        <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5" ref={messageViewportRef}>
           {messages.length === 0 ? (
             <div className="flex h-full min-h-56 items-center justify-center rounded-[1.25rem] border border-dashed border-border bg-background px-5 text-center sm:min-h-64 sm:rounded-[1.5rem] sm:px-6">
               <div className="max-w-sm space-y-3">
