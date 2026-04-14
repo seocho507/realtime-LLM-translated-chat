@@ -23,6 +23,7 @@ function getApiBaseUrl() {
 
 export function useGoogleAuth() {
   const [session, setSession] = useState<AuthSession | null>(null)
+  const [sessionHydrated, setSessionHydrated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleReady, setGoogleReady] = useState(false)
@@ -60,19 +61,32 @@ export function useGoogleAuth() {
   }, [googleClientId])
 
   useEffect(() => {
+    let cancelled = false
+
     const run = async () => {
       try {
         const response = await fetch(`${apiBaseUrl}/api/auth/session`, { credentials: 'include' })
-        if (!response.ok) {
+        if (!response.ok || cancelled) {
           return
         }
         const user = await response.json()
-        setSession({ user })
+        if (!cancelled) {
+          setSession({ user })
+        }
       } catch {
         // best-effort session restore only
+      } finally {
+        if (!cancelled) {
+          setSessionHydrated(true)
+        }
       }
     }
+
     void run()
+
+    return () => {
+      cancelled = true
+    }
   }, [apiBaseUrl])
 
   const authenticate = async (path: string, body: object, fallbackMessage: string) => {
@@ -158,6 +172,7 @@ export function useGoogleAuth() {
     loginWithLocalAccount,
     logout,
     session,
+    sessionHydrated,
     signupWithLocalAccount,
   }
 }
