@@ -186,6 +186,7 @@ export function ChatRoom({
                       <SelectItem value="en">English</SelectItem>
                       <SelectItem value="ko">Korean</SelectItem>
                       <SelectItem value="ja">Japanese</SelectItem>
+                      <SelectItem value="zh">Chinese</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

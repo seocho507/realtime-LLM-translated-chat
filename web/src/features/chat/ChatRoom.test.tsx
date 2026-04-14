@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -34,6 +34,10 @@ describe('ChatRoom', () => {
       value: 640,
     })
     HTMLElement.prototype.scrollTo = vi.fn()
+    HTMLElement.prototype.scrollIntoView = vi.fn()
+    HTMLElement.prototype.hasPointerCapture = vi.fn(() => false)
+    HTMLElement.prototype.releasePointerCapture = vi.fn()
+    HTMLElement.prototype.setPointerCapture = vi.fn()
   })
 
   it('submits the draft when Enter is pressed', async () => {
@@ -155,6 +159,34 @@ describe('ChatRoom', () => {
     await user.click(screen.getByRole('button', { name: /leave/i }))
 
     expect(onLeave).toHaveBeenCalledTimes(1)
+  })
+
+  it('includes Chinese in the target language options', async () => {
+    render(
+      <ChatRoom
+        apiBaseUrl="http://localhost:8080"
+        conversationId="room-1"
+        onLeave={vi.fn()}
+        onRoomChange={vi.fn()}
+        session={{
+          user: {
+            session_id: 's1',
+            user_id: 'u1',
+            auth_provider: 'guest',
+            display_name: 'Guest User',
+            google_sub: null,
+            email: null,
+            expires_at: 9999999999,
+          },
+        }}
+      />,
+    )
+
+    const trigger = screen.getByLabelText(/target language/i)
+    trigger.focus()
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' })
+
+    expect((await screen.findAllByText('Chinese')).length).toBeGreaterThan(0)
   })
 
   it('renders sender names and scrolls to the latest message', () => {
