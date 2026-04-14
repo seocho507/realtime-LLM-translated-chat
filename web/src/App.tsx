@@ -171,24 +171,12 @@ export function App() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex min-h-screen flex-col">
-          <header className="flex items-center justify-between gap-3 px-1 py-2 sm:py-3">
-            <div>
-              <button
-                aria-label="Go to home"
-                className="rounded-full outline-none transition hover:opacity-85 focus-visible:ring-2 focus-visible:ring-ring/60"
-                onClick={() => void resetToInitial()}
-                type="button"
-              >
-                <span className="block size-9 rounded-full bg-primary sm:size-10" />
-              </button>
-            </div>
-          </header>
-
           <main className="flex flex-1 items-center justify-center py-4 sm:py-6">
             {auth.session && !showLanding ? (
               <ChatRoom
                 apiBaseUrl={auth.apiBaseUrl}
                 conversationId={roomId}
+                onLeave={() => void resetToInitial()}
                 onRoomChange={updateRoomId}
                 session={auth.session}
               />

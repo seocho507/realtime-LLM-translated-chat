@@ -1,5 +1,5 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { ArrowRightLeft, Menu, SendHorizonal, X } from 'lucide-react'
+import { ArrowRightLeft, LogOut, Menu, SendHorizonal, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -19,11 +19,13 @@ export function ChatRoom({
   session,
   apiBaseUrl,
   conversationId,
+  onLeave,
   onRoomChange,
 }: {
   session: AuthSession
   apiBaseUrl: string
   conversationId: string
+  onLeave: () => void
   onRoomChange: (roomId: string) => void
 }) {
   const [draft, setDraft] = useState('')
@@ -100,7 +102,11 @@ export function ChatRoom({
             <h3 className="mt-1 truncate text-base font-semibold tracking-[-0.04em] sm:text-lg">{conversationId}</h3>
             <p className="text-xs text-muted-foreground">{session.user.display_name}</p>
           </div>
-          <div className="relative">
+          <div className="relative flex items-center gap-2">
+            <Button className="h-10 px-4" onClick={onLeave} type="button" variant="outline">
+              <LogOut className="size-4" />
+              Leave
+            </Button>
             <Button
               aria-expanded={menuOpen}
               aria-label="Open room menu"

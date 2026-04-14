@@ -43,6 +43,7 @@ describe('ChatRoom', () => {
       <ChatRoom
         apiBaseUrl="http://localhost:8080"
         conversationId="room-1"
+        onLeave={vi.fn()}
         onRoomChange={vi.fn()}
         session={{
           user: {
@@ -72,6 +73,7 @@ describe('ChatRoom', () => {
       <ChatRoom
         apiBaseUrl="http://localhost:8080"
         conversationId="room-1"
+        onLeave={vi.fn()}
         onRoomChange={vi.fn()}
         session={{
           user: {
@@ -102,6 +104,7 @@ describe('ChatRoom', () => {
       <ChatRoom
         apiBaseUrl="http://localhost:8080"
         conversationId="room-1"
+        onLeave={vi.fn()}
         onRoomChange={onRoomChange}
         session={{
           user: {
@@ -125,6 +128,35 @@ describe('ChatRoom', () => {
     expect(onRoomChange).toHaveBeenCalledWith('team-alpha')
   })
 
+  it('leaves chat from the header action', async () => {
+    const user = userEvent.setup()
+    const onLeave = vi.fn()
+
+    render(
+      <ChatRoom
+        apiBaseUrl="http://localhost:8080"
+        conversationId="room-1"
+        onLeave={onLeave}
+        onRoomChange={vi.fn()}
+        session={{
+          user: {
+            session_id: 's1',
+            user_id: 'u1',
+            auth_provider: 'guest',
+            display_name: 'Guest User',
+            google_sub: null,
+            email: null,
+            expires_at: 9999999999,
+          },
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /leave/i }))
+
+    expect(onLeave).toHaveBeenCalledTimes(1)
+  })
+
   it('renders sender names and scrolls to the latest message', () => {
     mockedMessages.push({
       id: 'm1',
@@ -140,6 +172,7 @@ describe('ChatRoom', () => {
       <ChatRoom
         apiBaseUrl="http://localhost:8080"
         conversationId="room-1"
+        onLeave={vi.fn()}
         onRoomChange={vi.fn()}
         session={{
           user: {

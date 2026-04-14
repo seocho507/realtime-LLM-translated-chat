@@ -96,5 +96,6 @@ describe('App', () => {
 
     expect(screen.getByText('Chat room: demo-room')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: /join a room/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /go to home/i })).not.toBeInTheDocument()
   })
 })
