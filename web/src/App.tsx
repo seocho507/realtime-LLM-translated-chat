@@ -190,6 +190,26 @@ export function App() {
                   </p>
                 </div>
 
+                <section className="space-y-3 rounded-[1.5rem] border border-border bg-card p-4">
+                  <div className="space-y-1">
+                    <h2 className="text-base font-medium">How to use Talk</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Talk lets everyone stay in the same room while each person reads messages in their own target language.
+                    </p>
+                  </div>
+                  <ol className="space-y-2 text-sm text-muted-foreground">
+                    <li>
+                      <span className="font-medium text-foreground">1.</span> Continue as a guest or sign in with a local account.
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">2.</span> Choose a room id to create or join a shared conversation.
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">3.</span> Inside the room, pick your target language and start chatting.
+                    </li>
+                  </ol>
+                </section>
+
                 {auth.session ? (
                   <section className="space-y-4 rounded-[1.5rem] border border-border bg-card p-4">
                     <div className="space-y-2">

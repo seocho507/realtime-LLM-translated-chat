@@ -66,6 +66,9 @@ describe('App', () => {
     expect(screen.getByText('Auth controls')).toBeInTheDocument()
     expect(screen.queryByLabelText(/^room id$/i)).not.toBeInTheDocument()
     expect(screen.getByText(/join first, then choose the room id/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /how to use talk/i })).toBeInTheDocument()
+    expect(screen.getByText(/continue as a guest or sign in/i)).toBeInTheDocument()
+    expect(screen.getByText(/pick your target language and start chatting/i)).toBeInTheDocument()
   })
 
   it('opens the room dialog after a new session is created and enters chat with the submitted room', async () => {
