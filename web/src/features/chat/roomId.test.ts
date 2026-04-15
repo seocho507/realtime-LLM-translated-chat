@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_ROOM_ID, getRoomIdFromLocation, normalizeRoomId } from './roomId'
+import {
+  DEFAULT_ROOM_ID,
+  buildChatPath,
+  getLegacyRoomIdFromSearch,
+  getNormalizedRoomIdParam,
+  normalizeRoomId,
+} from './roomId'
 
 describe('roomId helpers', () => {
   it('normalizes a room id into a url-safe slug', () => {
@@ -11,7 +17,20 @@ describe('roomId helpers', () => {
     expect(normalizeRoomId('   ')).toBe(DEFAULT_ROOM_ID)
   })
 
-  it('reads the room id from the current location search', () => {
-    expect(getRoomIdFromLocation('?room=Project%20One')).toBe('project-one')
+  it('builds a canonical chat path', () => {
+    expect(buildChatPath(' Project One ')).toBe('/chat/project-one')
+  })
+
+  it('reads a legacy room id from query-string links', () => {
+    expect(getLegacyRoomIdFromSearch('?room=Project%20One')).toBe('project-one')
+  })
+
+  it('returns null when no legacy room id is present', () => {
+    expect(getLegacyRoomIdFromSearch('')).toBeNull()
+  })
+
+  it('normalizes path params and falls back to the default room id', () => {
+    expect(getNormalizedRoomIdParam('Team Alpha')).toBe('team-alpha')
+    expect(getNormalizedRoomIdParam(undefined)).toBe(DEFAULT_ROOM_ID)
   })
 })

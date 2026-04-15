@@ -10,17 +10,19 @@ export function normalizeRoomId(value: string): string {
   return normalized || DEFAULT_ROOM_ID
 }
 
-export function getRoomIdFromLocation(search: string): string {
-  const params = new URLSearchParams(search)
-  return normalizeRoomId(params.get('room') ?? DEFAULT_ROOM_ID)
+export function buildChatPath(roomId: string): string {
+  return `/chat/${normalizeRoomId(roomId)}`
 }
 
-export function syncRoomIdToUrl(roomId: string) {
-  const url = new URL(window.location.href)
-  if (roomId === DEFAULT_ROOM_ID) {
-    url.searchParams.delete('room')
-  } else {
-    url.searchParams.set('room', roomId)
+export function getLegacyRoomIdFromSearch(search: string): string | null {
+  const params = new URLSearchParams(search)
+  const roomId = params.get('room')
+  if (!roomId) {
+    return null
   }
-  window.history.replaceState({}, '', url)
+  return normalizeRoomId(roomId)
+}
+
+export function getNormalizedRoomIdParam(roomId: string | undefined): string {
+  return normalizeRoomId(roomId ?? DEFAULT_ROOM_ID)
 }

@@ -1,264 +1,128 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
-import { ArrowRightLeft, MessageSquareMore, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { GoogleLoginButton } from './features/auth/GoogleLoginButton'
 import { useGoogleAuth } from './features/auth/useGoogleAuth'
-import { ChatRoom } from './features/chat/ChatRoom'
-import { DEFAULT_ROOM_ID, getRoomIdFromLocation, normalizeRoomId, syncRoomIdToUrl } from './features/chat/roomId'
+import { ChatRoomRoute } from './features/chat/ChatRoomRoute'
+import { buildChatPath, DEFAULT_ROOM_ID, getLegacyRoomIdFromSearch, normalizeRoomId } from './features/chat/roomId'
+import { HomeScreen } from './features/home/HomeScreen'
 
-function RoomJoinDialog({
-  open,
-  roomDraft,
-  onClose,
-  onRoomDraftChange,
-  onSubmit,
-}: {
-  open: boolean
-  roomDraft: string
-  onClose(): void
-  onRoomDraftChange(value: string): void
-  onSubmit(event: FormEvent): void
-}) {
-  if (!open) {
-    return null
-  }
-
+function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 sm:items-center">
-      <div
-        aria-labelledby="join-room-dialog-title"
-        aria-modal="true"
-        className="w-full max-w-md rounded-[1.75rem] border border-border bg-card p-5 shadow-2xl sm:p-6"
-        role="dialog"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">Ready to join</p>
-            <h2 className="text-xl font-semibold tracking-[-0.05em]" id="join-room-dialog-title">
-              Join a room
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Enter the room id now and we&apos;ll connect you straight to chat.
-            </p>
-          </div>
-          <button
-            aria-label="Close room dialog"
-            className="rounded-full border border-border p-2 text-muted-foreground transition hover:text-foreground"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium" htmlFor="join-room-id">
-              Room id
-            </label>
-            <input
-              autoFocus
-              className="h-12 w-full rounded-[1.1rem] border border-border bg-background px-4 text-sm outline-none transition-[border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring/60"
-              id="join-room-id"
-              onChange={(event) => onRoomDraftChange(event.target.value)}
-              placeholder="Enter room id"
-              value={roomDraft}
-            />
-            <p className="text-xs text-muted-foreground">Leave it blank to use {DEFAULT_ROOM_ID}.</p>
-          </div>
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button onClick={onClose} type="button" variant="outline">
-              Later
-            </Button>
-            <Button type="submit">
-              <ArrowRightLeft className="size-4" />
-              Enter chat
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <section className="mx-auto flex w-full max-w-md flex-col gap-4">
+      <section className="rounded-[1.5rem] border border-border bg-card p-6">
+        <p className="text-sm text-muted-foreground" role="status">
+          Restoring your Talk session…
+        </p>
+      </section>
+    </section>
   )
 }
 
 export function App() {
   const auth = useGoogleAuth()
-  const [roomId, setRoomId] = useState(() => getRoomIdFromLocation(window.location.search))
-  const [roomDraft, setRoomDraft] = useState(roomId)
-  const [showLanding, setShowLanding] = useState(true)
-  const [roomDialogOpen, setRoomDialogOpen] = useState(false)
-  const initializedSessionRef = useRef(false)
-  const previousSessionIdRef = useRef<string | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [intendedRoomId, setIntendedRoomId] = useState<string | null>(null)
 
   useEffect(() => {
-    const handlePopState = () => {
-      const nextRoomId = getRoomIdFromLocation(window.location.search)
-      setRoomId(nextRoomId)
-      setRoomDraft(nextRoomId)
+    if (!auth.sessionHydrated || location.pathname !== '/') {
+      return
     }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
+
+    const legacyRoomId = getLegacyRoomIdFromSearch(location.search)
+    if (!legacyRoomId) {
+      return
+    }
+
+    if (auth.session) {
+      navigate(buildChatPath(legacyRoomId), { replace: true })
+      return
+    }
+
+    setIntendedRoomId((current) => current ?? legacyRoomId)
+  }, [auth.session, auth.sessionHydrated, location.pathname, location.search, navigate])
 
   useEffect(() => {
-    if (!auth.sessionHydrated) {
+    if (!auth.sessionHydrated || !auth.session || !intendedRoomId || location.pathname !== '/') {
       return
     }
 
-    const nextSessionId = auth.session?.user.session_id ?? null
+    const nextRoomId = normalizeRoomId(intendedRoomId)
+    setIntendedRoomId(null)
+    navigate(buildChatPath(nextRoomId), { replace: true })
+  }, [auth.session, auth.sessionHydrated, intendedRoomId, location.pathname, navigate])
 
-    if (!initializedSessionRef.current) {
-      initializedSessionRef.current = true
-      previousSessionIdRef.current = nextSessionId
-      if (nextSessionId) {
-        setShowLanding(false)
-      }
-      return
-    }
-
-    if (!nextSessionId) {
-      previousSessionIdRef.current = null
-      setRoomDialogOpen(false)
-      setShowLanding(true)
-      return
-    }
-
-    if (nextSessionId !== previousSessionIdRef.current) {
-      previousSessionIdRef.current = nextSessionId
-      setRoomDraft(roomId)
-      setRoomDialogOpen(true)
-      setShowLanding(true)
-    }
-  }, [auth.session, auth.sessionHydrated, roomId])
-
-  const updateRoomId = (nextRoomId: string) => {
-    const normalizedRoomId = normalizeRoomId(nextRoomId)
-    setRoomId(normalizedRoomId)
-    setRoomDraft(normalizedRoomId)
-    syncRoomIdToUrl(normalizedRoomId)
+  const goToRoomFromHome = (roomId: string) => {
+    setIntendedRoomId(null)
+    navigate(buildChatPath(roomId))
   }
 
-  const submitRoomDialog = (event: FormEvent) => {
-    event.preventDefault()
-    updateRoomId(roomDraft)
-    setRoomDialogOpen(false)
-    setShowLanding(false)
+  const requireAuthForRoom = (roomId: string) => {
+    setIntendedRoomId(normalizeRoomId(roomId))
   }
 
-  const openRoomDialog = () => {
-    setRoomDraft(roomId)
-    setRoomDialogOpen(true)
-  }
-
-  const resetToInitial = async () => {
+  const leaveChat = async () => {
     if (auth.session?.user.auth_provider === 'guest') {
       await auth.logout()
     }
-    updateRoomId(DEFAULT_ROOM_ID)
-    setRoomDialogOpen(false)
-    setShowLanding(true)
+    setIntendedRoomId(null)
+    navigate('/', { replace: true })
   }
 
-  const logoutToInitial = async () => {
+  const logoutToHome = async () => {
     await auth.logout()
-    updateRoomId(DEFAULT_ROOM_ID)
-    setRoomDialogOpen(false)
-    setShowLanding(true)
+    setIntendedRoomId(null)
+    navigate('/', { replace: true })
   }
+
+  const initialRoomId = intendedRoomId ?? DEFAULT_ROOM_ID
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex min-h-screen flex-col">
           <main className="flex flex-1 items-center justify-center py-4 sm:py-6">
-            {auth.session && !showLanding ? (
-              <ChatRoom
-                apiBaseUrl={auth.apiBaseUrl}
-                conversationId={roomId}
-                onLeave={() => void resetToInitial()}
-                onRoomChange={updateRoomId}
-                session={auth.session}
-              />
+            {!auth.sessionHydrated ? (
+              <LoadingScreen />
             ) : (
-              <section className="mx-auto flex w-full max-w-md flex-col gap-4">
-                <div className="space-y-2 px-1">
-                  <h1 className="text-2xl font-semibold tracking-[-0.06em]">Talk</h1>
-                  <p className="text-sm text-muted-foreground">Real-time translated chat</p>
-                  <p className="text-sm text-muted-foreground">
-                    Join first, then choose the room id right before chat opens.
-                  </p>
-                </div>
-
-                <section className="space-y-3 rounded-[1.5rem] border border-border bg-card p-4">
-                  <div className="space-y-1">
-                    <h2 className="text-base font-medium">How to use Talk</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Talk lets everyone stay in the same room while each person reads messages in their own target language.
-                    </p>
-                  </div>
-                  <ol className="space-y-2 text-sm text-muted-foreground">
-                    <li>
-                      <span className="font-medium text-foreground">1.</span> Continue as a guest or sign in with a local account.
-                    </li>
-                    <li>
-                      <span className="font-medium text-foreground">2.</span> Choose a room id to create or join a shared conversation.
-                    </li>
-                    <li>
-                      <span className="font-medium text-foreground">3.</span> Inside the room, pick your target language and start chatting.
-                    </li>
-                  </ol>
-                </section>
-
-                {auth.session ? (
-                  <section className="space-y-4 rounded-[1.5rem] border border-border bg-card p-4">
-                    <div className="space-y-2">
-                      <p className="text-base font-medium">Signed in as {auth.session.user.display_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        You&apos;re authenticated. Pick the room you want to join when you&apos;re ready.
-                      </p>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Button className="w-full" onClick={openRoomDialog} size="lg" type="button">
-                        <MessageSquareMore className="size-4" />
-                        Join room
-                      </Button>
-                      <Button className="w-full" onClick={() => void logoutToInitial()} size="lg" type="button" variant="outline">
-                        Logout
-                      </Button>
-                    </div>
-                    {auth.error ? (
-                      <p className="text-sm text-destructive" role="alert">
-                        {auth.error}
-                      </p>
-                    ) : null}
-                  </section>
-                ) : (
-                  <GoogleLoginButton
-                    clientId={auth.googleClientId}
-                    error={auth.error}
-                    googleReady={auth.googleReady}
-                    loading={auth.loading}
-                    onContinueAsGuest={auth.continueAsGuest}
-                    onLogin={auth.loginWithCredential}
-                    onLoginWithLocalAccount={auth.loginWithLocalAccount}
-                    onSignupWithLocalAccount={auth.signupWithLocalAccount}
-                    session={auth.session}
-                  />
-                )}
-              </section>
+              <Routes>
+                <Route
+                  element={
+                    <HomeScreen
+                      error={auth.error}
+                      googleClientId={auth.googleClientId}
+                      googleReady={auth.googleReady}
+                      initialRoomId={initialRoomId}
+                      loading={auth.loading}
+                      onContinueAsGuest={auth.continueAsGuest}
+                      onEnterRoom={goToRoomFromHome}
+                      onLogin={auth.loginWithCredential}
+                      onLoginWithLocalAccount={auth.loginWithLocalAccount}
+                      onLogout={logoutToHome}
+                      onSignupWithLocalAccount={auth.signupWithLocalAccount}
+                      pendingRoomId={intendedRoomId}
+                      session={auth.session}
+                    />
+                  }
+                  path="/"
+                />
+                <Route
+                  element={
+                    <ChatRoomRoute
+                      apiBaseUrl={auth.apiBaseUrl}
+                      onLeave={leaveChat}
+                      onRequireAuth={requireAuthForRoom}
+                      session={auth.session}
+                    />
+                  }
+                  path="/chat/:roomId"
+                />
+                <Route element={<Navigate replace to="/" />} path="*" />
+              </Routes>
             )}
           </main>
         </div>
       </div>
-
-      <RoomJoinDialog
-        onClose={() => setRoomDialogOpen(false)}
-        onRoomDraftChange={setRoomDraft}
-        onSubmit={submitRoomDialog}
-        open={Boolean(auth.session) && roomDialogOpen}
-        roomDraft={roomDraft}
-      />
     </div>
   )
 }
