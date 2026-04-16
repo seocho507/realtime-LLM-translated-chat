@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth_google import router as auth_router
 from app.api.ws import router as ws_router
@@ -31,6 +34,15 @@ from app.translation.service import TranslationService
 def create_app() -> FastAPI:
     settings = get_settings()
     web_dist_dir = Path(settings.web_dist_dir)
+
+    def should_serve_spa_fallback(request: Request) -> bool:
+        if request.method not in {"GET", "HEAD"}:
+            return False
+        if request.url.path.startswith(("/api", "/ws")):
+            return False
+
+        requested_path = PurePosixPath(request.url.path)
+        return requested_path.suffix == ""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -98,6 +110,17 @@ def create_app() -> FastAPI:
             "counters": dict(app.state.metrics.counters),
             "timings": {key: values[:] for key, values in app.state.metrics.timings.items()},
         }
+
+    @app.exception_handler(StarletteHTTPException)
+    async def serve_spa_fallback(request: Request, exc: StarletteHTTPException):
+        if exc.status_code != 404 or not should_serve_spa_fallback(request):
+            return await http_exception_handler(request, exc)
+
+        index_path = web_dist_dir / "index.html"
+        if not index_path.is_file():
+            return await http_exception_handler(request, exc)
+
+        return FileResponse(index_path)
 
     if web_dist_dir.is_dir():
         app.mount("/", StaticFiles(directory=web_dist_dir, html=True), name="web")

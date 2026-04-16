@@ -187,6 +187,32 @@ def test_app_serves_built_frontend_when_dist_exists(tmp_path: Path, monkeypatch:
     assert "console.log('talk');" in asset_response.text
 
 
+def test_app_serves_index_for_chat_route_refresh_when_dist_exists(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    dist_dir = tmp_path / 'web-dist'
+    dist_dir.mkdir()
+    (dist_dir / 'index.html').write_text('<!doctype html><html><body>talk web</body></html>', encoding='utf-8')
+    monkeypatch.setenv('WEB_DIST_DIR', str(dist_dir))
+
+    with build_client() as client:
+        response = client.get('/chat/room-1')
+
+    assert response.status_code == 200
+    assert response.headers['content-type'].startswith('text/html')
+    assert 'talk web' in response.text
+
+
+def test_app_keeps_missing_asset_requests_as_404(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    dist_dir = tmp_path / 'web-dist'
+    dist_dir.mkdir()
+    (dist_dir / 'index.html').write_text('<!doctype html><html><body>talk web</body></html>', encoding='utf-8')
+    monkeypatch.setenv('WEB_DIST_DIR', str(dist_dir))
+
+    with build_client() as client:
+        response = client.get('/assets/missing.js')
+
+    assert response.status_code == 404
+
+
 @pytest.mark.asyncio
 async def test_orchestrator_translates_per_target_language_and_records_metrics():
     connection_manager = FakeConnectionManager()
