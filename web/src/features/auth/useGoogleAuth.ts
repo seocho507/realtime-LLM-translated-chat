@@ -12,8 +12,6 @@ export interface AuthSession {
   }
 }
 
-const GOOGLE_SCRIPT = 'https://accounts.google.com/gsi/client'
-
 function getApiBaseUrl() {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL
@@ -26,39 +24,7 @@ export function useGoogleAuth() {
   const [sessionHydrated, setSessionHydrated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [googleReady, setGoogleReady] = useState(false)
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), [])
-
-  useEffect(() => {
-    let cancelled = false
-    if (!googleClientId) {
-      return
-    }
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${GOOGLE_SCRIPT}"]`)
-    if (existing) {
-      setGoogleReady(Boolean(window.google?.accounts?.id))
-      return
-    }
-    const script = document.createElement('script')
-    script.src = GOOGLE_SCRIPT
-    script.async = true
-    script.defer = true
-    script.onload = () => {
-      if (!cancelled) {
-        setGoogleReady(Boolean(window.google?.accounts?.id))
-      }
-    }
-    script.onerror = () => {
-      if (!cancelled) {
-        setError('Failed to load Google Identity Services script.')
-      }
-    }
-    document.head.appendChild(script)
-    return () => {
-      cancelled = true
-    }
-  }, [googleClientId])
 
   useEffect(() => {
     let cancelled = false
@@ -118,10 +84,6 @@ export function useGoogleAuth() {
     }
   }
 
-  const loginWithCredential = async (credential: string) => {
-    await authenticate('/api/auth/google', { credential }, 'Google login failed.')
-  }
-
   const continueAsGuest = async (displayName?: string) => {
     await authenticate('/api/auth/guest', { display_name: displayName }, 'Guest entry failed.')
   }
@@ -165,10 +127,7 @@ export function useGoogleAuth() {
     apiBaseUrl,
     continueAsGuest,
     error,
-    googleClientId,
-    googleReady,
     loading,
-    loginWithCredential,
     loginWithLocalAccount,
     logout,
     session,

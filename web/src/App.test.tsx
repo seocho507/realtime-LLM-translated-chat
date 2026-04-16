@@ -13,8 +13,8 @@ vi.mock('./features/auth/useGoogleAuth', () => ({
   useGoogleAuth: () => mockUseGoogleAuth(),
 }))
 
-vi.mock('./features/auth/GoogleLoginButton', () => ({
-  GoogleLoginButton: () => <div>Auth controls</div>,
+vi.mock('./features/auth/AuthAccessPanel', () => ({
+  AuthAccessPanel: () => <div>Auth controls</div>,
 }))
 
 vi.mock('./features/chat/ChatRoom', () => ({
@@ -105,10 +105,8 @@ describe('App', () => {
 
     expect(screen.getByText('Auth controls')).toBeInTheDocument()
     expect(screen.queryByLabelText(/^room id$/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/join first, then choose the room id/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /how to use talk/i })).toBeInTheDocument()
-    expect(screen.getByText(/continue as a guest or sign in/i)).toBeInTheDocument()
-    expect(screen.getByText(/pick your target language and start chatting/i)).toBeInTheDocument()
+    expect(screen.getByText(/real-time translated conversation/i)).toBeInTheDocument()
+    expect(screen.getByText(/step into the same room/i)).toBeInTheDocument()
     expect(screen.getByTestId('location-path')).toHaveTextContent('/')
   })
 
@@ -128,7 +126,7 @@ describe('App', () => {
 
     renderApp('/chat/team-alpha')
 
-    expect(screen.getByRole('status')).toHaveTextContent(/restoring your talk session/i)
+    expect(screen.getByRole('status')).toHaveTextContent(/restoring your session and room details/i)
     expect(screen.getByTestId('location-path')).toHaveTextContent('/chat/team-alpha')
     expect(screen.queryByText(/chat room:/i)).not.toBeInTheDocument()
   })
@@ -201,10 +199,9 @@ describe('App', () => {
 
     renderApp('/')
 
-    await user.click(screen.getByRole('button', { name: /join room/i }))
     await user.clear(screen.getByLabelText(/^room id$/i))
     await user.type(screen.getByLabelText(/^room id$/i), 'Team Alpha')
-    await user.click(screen.getByRole('button', { name: /enter chat/i }))
+    await user.click(screen.getByRole('button', { name: /enter room/i }))
 
     await waitFor(() => {
       expect(screen.getByText('Chat room: team-alpha')).toBeInTheDocument()

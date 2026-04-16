@@ -2,28 +2,24 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import { GoogleLoginButton } from './GoogleLoginButton'
+import { AuthAccessPanel } from './AuthAccessPanel'
 
 function buildProps() {
   return {
-    clientId: '',
     loading: false,
-    session: null,
     error: null,
-    googleReady: false,
-    onLogin: vi.fn().mockResolvedValue(undefined),
     onContinueAsGuest: vi.fn().mockResolvedValue(undefined),
     onSignupWithLocalAccount: vi.fn().mockResolvedValue(undefined),
     onLoginWithLocalAccount: vi.fn().mockResolvedValue(undefined),
   }
 }
 
-describe('GoogleLoginButton', () => {
+describe('AuthAccessPanel', () => {
   it('continues as guest when requested', async () => {
     const user = userEvent.setup()
     const props = buildProps()
 
-    render(<GoogleLoginButton {...props} />)
+    render(<AuthAccessPanel {...props} />)
 
     await user.type(screen.getByLabelText(/nickname/i), 'Guest Floyd')
     await user.click(screen.getByRole('button', { name: /continue as guest/i }))
@@ -35,7 +31,7 @@ describe('GoogleLoginButton', () => {
     const user = userEvent.setup()
     const props = buildProps()
 
-    render(<GoogleLoginButton {...props} />)
+    render(<AuthAccessPanel {...props} />)
 
     await user.type(screen.getByLabelText(/^display name$/i), 'Local User')
     await user.type(screen.getByLabelText(/^email$/i), 'local@example.com')
@@ -53,7 +49,7 @@ describe('GoogleLoginButton', () => {
     const user = userEvent.setup()
     const props = buildProps()
 
-    render(<GoogleLoginButton {...props} />)
+    render(<AuthAccessPanel {...props} />)
 
     await user.click(screen.getByRole('button', { name: /^sign in$/i }))
     await user.type(screen.getByLabelText(/^email$/i), 'local@example.com')

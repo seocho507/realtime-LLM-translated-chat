@@ -9,10 +9,13 @@ import { HomeScreen } from './features/home/HomeScreen'
 function LoadingScreen() {
   return (
     <section className="mx-auto flex w-full max-w-md flex-col gap-4">
-      <section className="rounded-[1.5rem] border border-border bg-card p-6">
-        <p className="text-sm text-muted-foreground" role="status">
-          Restoring your Talk session…
-        </p>
+      <section className="rounded-[1.75rem] border border-border bg-card p-6 shadow-sm">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Getting Talk ready</p>
+          <p className="text-sm text-muted-foreground" role="status">
+            Restoring your session and room details…
+          </p>
+        </div>
       </section>
     </section>
   )
@@ -90,13 +93,10 @@ export function App() {
                   element={
                     <HomeScreen
                       error={auth.error}
-                      googleClientId={auth.googleClientId}
-                      googleReady={auth.googleReady}
                       initialRoomId={initialRoomId}
                       loading={auth.loading}
                       onContinueAsGuest={auth.continueAsGuest}
                       onEnterRoom={goToRoomFromHome}
-                      onLogin={auth.loginWithCredential}
                       onLoginWithLocalAccount={auth.loginWithLocalAccount}
                       onLogout={logoutToHome}
                       onSignupWithLocalAccount={auth.signupWithLocalAccount}
