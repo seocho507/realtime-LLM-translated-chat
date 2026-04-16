@@ -5,6 +5,7 @@ export interface TranslationChunk {
 
 export interface TranslationBuffer {
   add(chunk: TranslationChunk): void
+  clear(id: string): void
   flush(): void
   stop(): void
 }
@@ -15,6 +16,13 @@ export function createTranslationBuffer(
 ): TranslationBuffer {
   const pending = new Map<string, string>()
   let timer: number | undefined
+
+  const cancelTimerIfIdle = () => {
+    if (!pending.size && timer) {
+      window.clearTimeout(timer)
+      timer = undefined
+    }
+  }
 
   const flush = () => {
     timer = undefined
@@ -30,6 +38,10 @@ export function createTranslationBuffer(
       if (!timer) {
         timer = window.setTimeout(flush, flushMs)
       }
+    },
+    clear(id) {
+      pending.delete(id)
+      cancelTimerIfIdle()
     },
     flush,
     stop() {

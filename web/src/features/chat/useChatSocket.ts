@@ -49,7 +49,7 @@ export function useChatSocket({
       senderDisplayName: payload.sender_display_name ?? payload.sender_email ?? payload.sender_id ?? 'Unknown',
       original: payload.original ?? '',
       translated: '',
-      status: payload.status ?? 'translating',
+      translationState: 'streaming',
       src: payload.src ?? 'auto',
       dst: payload.dst ?? 'en',
     }
@@ -83,7 +83,7 @@ export function useChatSocket({
               ? {
                   ...message,
                   translated: payload.text ?? message.translated,
-                  status: 'translated',
+                  translationState: 'ready',
                   dst: payload.dst ?? message.dst,
                 }
               : message,
@@ -91,13 +91,14 @@ export function useChatSocket({
         )
       }
       if (payload.t === 'msg_error') {
+        buffer.clear(payload.id ?? '')
         setMessages((current) =>
           current.map((message) =>
             message.id === payload.id
               ? {
                   ...message,
                   translated: message.original,
-                  status: 'original',
+                  translationState: 'fallback',
                   dst: payload.dst ?? message.dst,
                 }
               : message,

@@ -100,6 +100,7 @@ describe('useChatSocket', () => {
       expect(messages).toContain('"senderDisplayName":"Guest User"')
       expect(messages).toContain('"translated":"[en] hello"')
       expect(messages).toContain('"dst":"en"')
+      expect(messages).toContain('"translationState":"ready"')
     })
 
     view.rerender(<Harness conversationId="room-1" targetLang="ko" />)
@@ -164,6 +165,31 @@ describe('useChatSocket', () => {
     })
   })
 
+  it('keeps a message in the streaming state while deltas are still arriving', async () => {
+    vi.useFakeTimers()
+
+    render(<Harness conversationId="room-1" targetLang="en" />)
+    const socket = MockWebSocket.instances[0]
+
+    act(() => {
+      socket.open()
+      socket.receive({
+        t: 'msg_start',
+        id: 'm1',
+        original: 'hello',
+        src: 'en',
+        dst: 'en',
+        sender_display_name: 'Guest User',
+      })
+      socket.receive({ t: 'msg_delta', id: 'm1', text: '[en] hel' })
+      vi.advanceTimersByTime(50)
+    })
+
+    const messages = screen.getByTestId('messages').textContent ?? ''
+    expect(messages).toContain('"translated":"[en] hel"')
+    expect(messages).toContain('"translationState":"streaming"')
+  })
+
   it('falls back to the original text when translation errors', async () => {
     render(<Harness conversationId="room-1" targetLang="en" />)
     const socket = MockWebSocket.instances[0]
@@ -182,10 +208,35 @@ describe('useChatSocket', () => {
       socket.receive({ t: 'msg_error', id: 'm1', dst: 'en', code: 'translation_failed' })
     })
 
-    await waitFor(() => {
-      const messages = screen.getByTestId('messages').textContent ?? ''
-      expect(messages).toContain('"translated":"hello"')
-      expect(messages).toContain('"status":"original"')
+    const messages = screen.getByTestId('messages').textContent ?? ''
+    expect(messages).toContain('"translated":"hello"')
+    expect(messages).toContain('"translationState":"fallback"')
+  })
+
+  it('ignores buffered deltas after a translation falls back', async () => {
+    vi.useFakeTimers()
+
+    render(<Harness conversationId="room-1" targetLang="en" />)
+    const socket = MockWebSocket.instances[0]
+
+    act(() => {
+      socket.open()
+      socket.receive({
+        t: 'msg_start',
+        id: 'm1',
+        original: 'hello',
+        src: 'en',
+        dst: 'en',
+        sender_display_name: 'Guest User',
+      })
+      socket.receive({ t: 'msg_delta', id: 'm1', text: 'partial ' })
+      socket.receive({ t: 'msg_error', id: 'm1', dst: 'en', code: 'translation_failed' })
+      vi.advanceTimersByTime(50)
     })
+
+    const messages = screen.getByTestId('messages').textContent ?? ''
+    expect(messages).toContain('"translated":"hello"')
+    expect(messages).toContain('"translationState":"fallback"')
+    expect(messages).not.toContain('partial')
   })
 })
